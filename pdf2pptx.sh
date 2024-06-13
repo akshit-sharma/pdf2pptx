@@ -33,23 +33,15 @@ mkdir "$tempname"
 
 # Set return code of piped command to first nonzero return code
 set -o pipefail
-n_pages=$(identify "$1" | wc -l)
-returncode=$?
-if [ $returncode -ne 0 ]; then
-   echo "Unable to count number of PDF pages, exiting"
-   exit $returncode
-fi
-if [ $n_pages -eq 0 ]; then
-   echo "Empty PDF (0 pages), exiting"
-   exit 1
-fi
 
-for ((i=0; i<n_pages; i++))
-do
-    convert -density $density $colorspace -resize "x${resolution}" "$1[$i]" "$tempname"/slide-$i.png
-    returncode=$?
-    if [ $returncode -ne 0 ]; then break; fi
-done
+pushd $tempname > /dev/null
+  pdftoppm -png ../$1 slide
+  returncode=$?
+  if [ $returncode -ne 0 ]; then
+    echo "Error with pdftoppm"
+    exit $returncode
+  fi
+popd > /dev/null
 
 if [ $returncode -eq 0 ]; then
 	echo "Extraction succ!"
@@ -111,7 +103,9 @@ function add_slide {
 
 function make_slide {
 	cp ../slides/slide1.xml ../slides/slide-$1.xml
-	cat ../slides/_rels/slide1.xml.rels | sed "s/image1\.JPG/slide-${slide}.png/g" > ../slides/_rels/slide-$1.xml.rels
+	# pad with 00 with only 2 digits total
+	slidePad=$(printf "%02d" $slide)
+	cat ../slides/_rels/slide1.xml.rels | sed "s/image1\.JPG/slide-${slidePad}.png/g" > ../slides/_rels/slide-$1.xml.rels
 	add_slide $1
 }
 
