@@ -104,7 +104,8 @@ function add_slide {
 function make_slide {
 	cp ../slides/slide1.xml ../slides/slide-$1.xml
 	# pad with 00 with only 2 digits total
-	slidePad=$(printf "%02d" $slide)
+	slidePad=$((slide + 1))
+  slidePad=$(printf "%02d" $slidePad)
 	cat ../slides/_rels/slide1.xml.rels | sed "s/image1\.JPG/slide-${slidePad}.png/g" > ../slides/_rels/slide-$1.xml.rels
 	add_slide $1
 }
